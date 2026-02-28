@@ -1,4 +1,4 @@
-package org.apache.cordova.firebasex.analytics;
+package org.apache.cordova.firebasex;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -9,7 +9,6 @@ import com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.firebasex.core.FirebasexCorePlugin;
 
 import org.json.JSONArray;
 import org.json.JSONException;

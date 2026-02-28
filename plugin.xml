@@ -35,7 +35,7 @@
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="FirebasexAnalyticsPlugin">
-                <param name="android-package" value="org.apache.cordova.firebasex.analytics.FirebasexAnalyticsPlugin" />
+                <param name="android-package" value="org.apache.cordova.firebasex.FirebasexAnalyticsPlugin" />
                 <param name="onload" value="true" />
             </feature>
         </config-file>
@@ -54,7 +54,7 @@
             <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="$GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS" />
         </config-file>
 
-        <source-file src="src/android/FirebasexAnalyticsPlugin.java" target-dir="src/org/apache/cordova/firebasex/analytics" />
+        <source-file src="src/android/FirebasexAnalyticsPlugin.java" target-dir="src/org/apache/cordova/firebasex" />
         <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
     </platform>
 
