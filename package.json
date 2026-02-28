@@ -1,0 +1,17 @@
+{
+  "name": "cordova-plugin-firebasex-analytics",
+  "version": "1.0.0",
+  "description": "Firebase Analytics module for FirebaseX",
+  "license": "MIT",
+  "keywords": ["cordova", "firebase", "analytics"],
+  "cordova": {
+    "id": "cordova-plugin-firebasex-analytics",
+    "platforms": ["android", "ios"]
+  },
+  "dependencies": {
+    "cordova-plugin-firebasex-core": ">=1.0.0"
+  },
+  "devDependencies": {
+    "xml-js": "^1.6.11"
+  }
+}
