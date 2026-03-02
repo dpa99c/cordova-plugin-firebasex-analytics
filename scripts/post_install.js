@@ -1,22 +1,65 @@
 #!/usr/bin/env node
 
+/**
+ * @file post_install.js
+ * @brief npm post-install script for the cordova-plugin-firebasex-analytics plugin.
+ *
+ * Runs automatically after `npm install` to modify the plugin's `plugin.xml` based on
+ * plugin variable settings. This script handles build-time customisation that must be
+ * applied before Cordova processes the plugin XML.
+ *
+ * **Supported plugin variables:**
+ * - `FIREBASE_ANALYTICS_WITHOUT_ADS` — When `true`:
+ *   - Removes the `FirebaseAnalytics/IdentitySupport` pod (excludes IDFA support on iOS).
+ *   - Disables `google_analytics_adid_collection_enabled` on Android.
+ *   - Enables removal of the `AD_ID` permission on Android.
+ * - `IOS_ON_DEVICE_CONVERSION_ANALYTICS` — When `true`:
+ *   - If ads are disabled: enables the `GoogleAdsOnDeviceConversion` pod.
+ *   - If ads are enabled: replaces separate Core/IdentitySupport pods with unified `FirebaseAnalytics` pod.
+ *
+ * Plugin variables are resolved using a 3-layer override strategy:
+ * 1. Defaults from `plugin.xml` `<preference>` elements.
+ * 2. Overrides from `config.xml` `<plugin><variable>` elements.
+ * 3. Overrides from `package.json` `cordova.plugins` entries (highest priority).
+ *
+ * @module scripts/post_install
+ */
 const PLUGIN_NAME = "FirebasexAnalytics plugin";
 const PLUGIN_ID = "cordova-plugin-firebasex-analytics";
 
+/** @constant {string[]} Plugin variable names processed by this script. */
 const VARIABLE_NAMES = [
     "FIREBASE_ANALYTICS_WITHOUT_ADS",
     "IOS_ON_DEVICE_CONVERSION_ANALYTICS"
 ];
 
+/**
+ * @type {Object.<string, Function>} Maps each variable name to its applicator function.
+ * Each applicator modifies `pluginXmlText` in place when its variable is `true`.
+ */
 const variableApplicators = {};
+/** @type {module:path} Node.js path module (loaded in main). */
 let path, cwd, fs, parser;
+/** @type {string} Absolute path to this plugin's plugin.xml file. */
 let pluginXmlPath, pluginXmlText, pluginXmlData;
 let projectPath, modulesPath, pluginNodePath;
 let projectPackageJsonPath, projectPackageJsonData;
 let configXmlPath, configXmlData;
+/** @type {Object} Resolved plugin variable key/value pairs. */
 let pluginVariables;
+/** @type {boolean} Whether plugin.xml has been modified and needs writing. */
 let pluginXmlModified = false;
 
+/**
+ * Applicator for `FIREBASE_ANALYTICS_WITHOUT_ADS`.
+ *
+ * When enabled:
+ * - **iOS:** Removes the `FirebaseAnalytics/IdentitySupport` pod entry from plugin.xml
+ *   to exclude IDFA (Identifier for Advertisers) support.
+ * - **Android:** Sets `google_analytics_adid_collection_enabled` to `false` and
+ *   uncomments the `<uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>`
+ *   directive to strip the AD_ID permission at build time.
+ */
 variableApplicators.FIREBASE_ANALYTICS_WITHOUT_ADS = function() {
     // iOS: Remove IdentitySupport pod to exclude IDFA support
     const identitySupportPodRegExp = /\s*<pod name="FirebaseAnalytics\/IdentitySupport" spec="\d+\.\d+\.\d+"\/>/;
@@ -51,6 +94,15 @@ variableApplicators.FIREBASE_ANALYTICS_WITHOUT_ADS = function() {
     }
 };
 
+/**
+ * Applicator for `IOS_ON_DEVICE_CONVERSION_ANALYTICS`.
+ *
+ * Behaviour depends on the `FIREBASE_ANALYTICS_WITHOUT_ADS` setting:
+ * - **Without ads:** Uncomments the `GoogleAdsOnDeviceConversion` pod entry in plugin.xml.
+ * - **With ads:** Replaces the separate `FirebaseAnalytics/Core` and
+ *   `FirebaseAnalytics/IdentitySupport` pod entries with a single unified
+ *   `FirebaseAnalytics` pod (which includes on-device conversion support).
+ */
 variableApplicators.IOS_ON_DEVICE_CONVERSION_ANALYTICS = function() {
     const withoutAds = resolveBoolean(pluginVariables['FIREBASE_ANALYTICS_WITHOUT_ADS']);
 
@@ -75,6 +127,10 @@ variableApplicators.IOS_ON_DEVICE_CONVERSION_ANALYTICS = function() {
     }
 };
 
+/**
+ * Resolves plugin variables and applies each enabled variable's applicator function.
+ * Writes the modified plugin.xml to disk if any changes were made.
+ */
 const run = function() {
     pluginVariables = parsePluginVariables();
     for (const variableName of VARIABLE_NAMES) {
@@ -83,6 +139,11 @@ const run = function() {
     if (pluginXmlModified) writePluginXmlText();
 };
 
+/**
+ * Invokes the applicator for a single plugin variable if its resolved value is truthy.
+ *
+ * @param {string} variableName - The plugin variable name to apply.
+ */
 const applyPluginVariable = function(variableName) {
     const shouldEnable = resolveBoolean(pluginVariables[variableName]);
     if (!shouldEnable) {
@@ -93,12 +154,27 @@ const applyPluginVariable = function(variableName) {
     variableApplicators[variableName]();
 };
 
+/**
+ * Coerces a value to a boolean.
+ * Handles `undefined`, `null`, booleans, numeric strings, and `"true"`/`"false"` string literals.
+ *
+ * @param {*} value - The value to resolve.
+ * @returns {boolean} The resolved boolean value.
+ */
 const resolveBoolean = function(value) {
     if (typeof value === 'undefined' || value === null) return false;
     if (value === true || value === false) return value;
     return !isNaN(value) ? parseFloat(value) : /^\s*(true|false)\s*$/i.exec(value) ? RegExp.$1.toLowerCase() === "true" : value;
 };
 
+/**
+ * Resolves plugin variables using a 3-layer override strategy:
+ * 1. Default values from `plugin.xml` `<preference>` elements.
+ * 2. Overrides from `config.xml` `<plugin><variable>` elements.
+ * 3. Overrides from `package.json` `cordova.plugins` entries (highest priority).
+ *
+ * @returns {Object} Resolved plugin variable key/value pairs.
+ */
 const parsePluginVariables = function() {
     const vars = {};
     const plugin = parsePluginXml();
@@ -137,6 +213,11 @@ const parsePluginVariables = function() {
     return vars;
 };
 
+/**
+ * Parses the project's `package.json` file. Result is cached for subsequent calls.
+ *
+ * @returns {Object|undefined} Parsed package.json content, or undefined on parse failure.
+ */
 const parsePackageJson = function() {
     if (projectPackageJsonData) return projectPackageJsonData;
     try {
@@ -147,6 +228,11 @@ const parsePackageJson = function() {
     }
 };
 
+/**
+ * Parses the project's `config.xml` file to JSON. Result is cached for subsequent calls.
+ *
+ * @returns {Object|undefined} Parsed config.xml as JSON, or undefined on parse failure.
+ */
 const parseConfigXml = function() {
     if (configXmlData) return configXmlData;
     try {
@@ -158,6 +244,12 @@ const parseConfigXml = function() {
     }
 };
 
+/**
+ * Parses the plugin's `plugin.xml` file to JSON. Also stores the raw XML text
+ * in `pluginXmlText` for regex-based modifications. Result is cached.
+ *
+ * @returns {Object} Parsed plugin.xml as JSON.
+ */
 const parsePluginXml = function() {
     if (pluginXmlData) return pluginXmlData;
     const data = parseXmlFileToJson(pluginXmlPath);
@@ -166,6 +258,13 @@ const parsePluginXml = function() {
     return pluginXmlData;
 };
 
+/**
+ * Parses an XML file to JSON using the `xml-js` library.
+ *
+ * @param {string} filepath - Path to the XML file.
+ * @param {Object} [parseOpts={compact: true}] - Options passed to `xml-js` parser.
+ * @returns {{text: string, xml: Object}} The raw XML text and parsed JSON representation.
+ */
 const parseXmlFileToJson = function(filepath, parseOpts) {
     parseOpts = parseOpts || {compact: true};
     const text = fs.readFileSync(path.resolve(filepath), 'utf-8');
@@ -173,11 +272,18 @@ const parseXmlFileToJson = function(filepath, parseOpts) {
     return {text, xml};
 };
 
+/**
+ * Writes the modified `pluginXmlText` back to the plugin.xml file on disk.
+ */
 const writePluginXmlText = function() {
     fs.writeFileSync(pluginXmlPath, pluginXmlText, 'utf-8');
     console.log(`Wrote modified ${PLUGIN_ID}/plugin.xml`);
 };
 
+/**
+ * Script entry point. Loads dependencies, resolves project paths, and invokes {@link run}.
+ * All errors are caught and logged to stderr to avoid breaking `npm install`.
+ */
 const main = function() {
     try {
         fs = require('fs');

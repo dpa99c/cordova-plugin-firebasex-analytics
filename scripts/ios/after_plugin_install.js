@@ -1,7 +1,22 @@
+/**
+ * @file after_plugin_install.js
+ * @brief Hook script that runs after the analytics plugin is installed on iOS.
+ *
+ * If a Google Tag Manager (GTM) container directory exists at `resources/ios/container`
+ * in the Cordova project root, this script copies it into the iOS platform's app directory
+ * and registers it as a resource reference in the Xcode project.
+ */
 var fs = require("fs");
 var path = require("path");
 var xcode = require("xcode");
 
+/**
+ * Cordova hook entry point.
+ * Resolves the app name from `config.xml`, then delegates to
+ * {@link addGoogleTagManagerContainer} to copy and register the GTM container.
+ *
+ * @param {object} context - The Cordova hook context.
+ */
 module.exports = function(context) {
     var iosPlatformPath = path.join(context.opts.projectRoot, "platforms", "ios");
 
@@ -26,6 +41,14 @@ module.exports = function(context) {
     addGoogleTagManagerContainer(context, iosPlatformPath, appName);
 };
 
+/**
+ * Copies the GTM container directory into the iOS app bundle and adds it
+ * as a folder resource reference in the Xcode project.
+ *
+ * @param {object} context - The Cordova hook context.
+ * @param {string} iosPlatformPath - Absolute path to `platforms/ios`.
+ * @param {string} appName - The application name from `config.xml`.
+ */
 function addGoogleTagManagerContainer(context, iosPlatformPath, appName) {
     var containerDirectorySource = path.join(context.opts.projectRoot, "resources", "ios", "container");
     var containerDirectoryTarget = path.join(iosPlatformPath, appName, "container");
