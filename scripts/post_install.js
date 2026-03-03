@@ -26,6 +26,12 @@
  */
 const PLUGIN_NAME = "FirebasexAnalytics plugin";
 const PLUGIN_ID = "cordova-plugin-firebasex-analytics";
+/**
+ * The plugin ID of the backward-compatible wrapper meta-plugin.
+ * Used as a fallback source for plugin variables in config.xml and package.json.
+ * @constant {string}
+ */
+const WRAPPER_PLUGIN_ID = "cordova-plugin-firebasex";
 
 /** @constant {string[]} Plugin variable names processed by this script. */
 const VARIABLE_NAMES = [
@@ -190,9 +196,12 @@ const parsePluginVariables = function() {
 
     const config = parseConfigXml();
     if (config) {
+        // Check both this plugin's ID and the wrapper meta-plugin ID so that
+        // variables specified when installing the wrapper are also picked up.
         (config.widget.plugin ? [].concat(config.widget.plugin) : []).forEach(function(plugin) {
             (plugin.variable ? [].concat(plugin.variable) : []).forEach(function(variable) {
-                if ((plugin._attributes.name === PLUGIN_ID || plugin._attributes.id === PLUGIN_ID) && variable._attributes.name && variable._attributes.value) {
+                var pluginName = plugin._attributes.name || plugin._attributes.id;
+                if ((pluginName === PLUGIN_ID || pluginName === WRAPPER_PLUGIN_ID) && variable._attributes.name && variable._attributes.value) {
                     vars[variable._attributes.name] = variable._attributes.value;
                 }
             });
@@ -201,11 +210,16 @@ const parsePluginVariables = function() {
 
     const packageJSON = parsePackageJson();
     if (packageJSON && packageJSON.cordova && packageJSON.cordova.plugins) {
-        for (const pluginId in packageJSON.cordova.plugins) {
-            if (pluginId === PLUGIN_ID) {
-                for (const varName in packageJSON.cordova.plugins[pluginId]) {
-                    vars[varName] = packageJSON.cordova.plugins[pluginId][varName];
-                }
+        // First, apply wrapper variables as a base layer
+        if (packageJSON.cordova.plugins[WRAPPER_PLUGIN_ID]) {
+            for (const varName in packageJSON.cordova.plugins[WRAPPER_PLUGIN_ID]) {
+                vars[varName] = packageJSON.cordova.plugins[WRAPPER_PLUGIN_ID][varName];
+            }
+        }
+        // Then, apply this plugin's own variables (higher priority)
+        if (packageJSON.cordova.plugins[PLUGIN_ID]) {
+            for (const varName in packageJSON.cordova.plugins[PLUGIN_ID]) {
+                vars[varName] = packageJSON.cordova.plugins[PLUGIN_ID][varName];
             }
         }
     }
