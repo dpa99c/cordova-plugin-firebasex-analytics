@@ -1,12 +1,26 @@
 {
   "name": "cordova-plugin-firebasex-analytics",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Firebase Analytics module for FirebaseX",
+  "author": "Dave Alden",
   "license": "MIT",
   "keywords": ["cordova", "firebase", "analytics"],
   "cordova": {
     "id": "cordova-plugin-firebasex-analytics",
     "platforms": ["android", "ios"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dpa99c/cordova-plugin-firebasex-analytics.git"
+  },
+  "engines": {
+    "cordovaDependencies": {
+      "1.0.0": {
+        "cordova": ">=12",
+        "cordova-android": ">=14",
+        "cordova-ios": ">=7"
+      }
+    }
   },
   "dependencies": {
     "xcode": "^3.0.1"
