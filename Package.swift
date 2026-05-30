@@ -8,7 +8,7 @@ let analyticsSPMVariant = "full"
 
 let package = Package(
     name: "cordova-plugin-firebasex-analytics",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "cordova-plugin-firebasex-analytics",
@@ -28,6 +28,7 @@ let package = Package(
 
 func packageDependencies() -> [Package.Dependency] {
     var dependencies: [Package.Dependency] = [
+        .package(path: "../cordova-plugin-firebasex-core"),
         .package(url: "https://github.com/apache/cordova-ios.git", branch: "master"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", exact: firebaseSDKVersion),
         .package(url: "https://github.com/googleanalytics/google-tag-manager-ios-sdk.git", exact: googleTagManagerVersion),
@@ -47,6 +48,7 @@ func packageDependencies() -> [Package.Dependency] {
 
 func analyticsTargetDependencies() -> [Target.Dependency] {
     var dependencies: [Target.Dependency] = [
+        .product(name: "cordova-plugin-firebasex-core", package: "cordova-plugin-firebasex-core"),
         .product(name: "Cordova", package: "cordova-ios"),
         .product(name: "GoogleTagManager", package: "google-tag-manager-ios-sdk"),
     ]
