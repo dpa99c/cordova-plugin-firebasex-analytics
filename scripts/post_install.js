@@ -48,6 +48,7 @@ const variableApplicators = {};
 let path, cwd, fs, parser;
 /** @type {string} Absolute path to this plugin's plugin.xml file. */
 let pluginXmlPath, pluginXmlText, pluginXmlData;
+let packageSwiftPath, packageSwiftText;
 let projectPath, modulesPath, pluginNodePath;
 let projectPackageJsonPath, projectPackageJsonData;
 let configXmlPath, configXmlData;
@@ -68,7 +69,7 @@ let pluginXmlModified = false;
  */
 variableApplicators.FIREBASE_ANALYTICS_WITHOUT_ADS = function() {
     // iOS: Remove IdentitySupport pod to exclude IDFA support
-    const identitySupportPodRegExp = /\s*<pod name="FirebaseAnalytics\/IdentitySupport" spec="\d+\.\d+\.\d+"\/>/;
+    const identitySupportPodRegExp = /\s*<pod name="FirebaseAnalytics\/IdentitySupport" spec="[^"]+"(?:\s+nospm="true")?\s*\/>/;
     const identitySupportMatch = pluginXmlText.match(identitySupportPodRegExp);
 
     if (identitySupportMatch) {
@@ -113,24 +114,60 @@ variableApplicators.IOS_ON_DEVICE_CONVERSION_ANALYTICS = function() {
     const withoutAds = resolveBoolean(pluginVariables['FIREBASE_ANALYTICS_WITHOUT_ADS']);
 
     if (withoutAds) {
-        const commentedOutPodRegExp = /<!--<pod name="GoogleAdsOnDeviceConversion" spec="(\d+\.\d+\.\d+)"\/>-->/;
+        const commentedOutPodRegExp = /<!--\s*<pod name="GoogleAdsOnDeviceConversion" spec="([^"]+)"(?:\s+nospm="true")?\s*\/>\s*-->/;
         const match = pluginXmlText.match(commentedOutPodRegExp);
         if (match) {
-            const replacement = `<pod name="GoogleAdsOnDeviceConversion" spec="${match[1]}"/>`;
+            const replacement = `<pod name="GoogleAdsOnDeviceConversion" spec="${match[1]}" nospm="true" />`;
             pluginXmlText = pluginXmlText.replace(commentedOutPodRegExp, replacement);
             pluginXmlModified = true;
             console.log(`Enabled GoogleAdsOnDeviceConversion pod in ${PLUGIN_ID}/plugin.xml`);
         }
     } else {
-        const coreAndIdentitySupportRegExp = /<pod name="FirebaseAnalytics\/Core" spec="(\d+\.\d+\.\d+)"\/>\n\s*<pod name="FirebaseAnalytics\/IdentitySupport" spec="\d+\.\d+\.\d+"\/>/;
+        const coreAndIdentitySupportRegExp = /<pod name="FirebaseAnalytics\/Core" spec="([^"]+)"(?:\s+nospm="true")?\s*\/>\n\s*<pod name="FirebaseAnalytics\/IdentitySupport" spec="[^"]+"(?:\s+nospm="true")?\s*\/>/;
         const match = pluginXmlText.match(coreAndIdentitySupportRegExp);
         if (match) {
-            const replacement = `<pod name="FirebaseAnalytics" spec="${match[1]}"/>`;
+            const replacement = `<pod name="FirebaseAnalytics" spec="${match[1]}" nospm="true" />`;
             pluginXmlText = pluginXmlText.replace(coreAndIdentitySupportRegExp, replacement);
             pluginXmlModified = true;
             console.log(`Replaced Analytics/Core and IdentitySupport with FirebaseAnalytics pod in ${PLUGIN_ID}/plugin.xml`);
         }
     }
+};
+
+/**
+ * Applies the resolved analytics dependency mode and version overrides to Package.swift.
+ */
+const applyPackageSwiftSettings = function() {
+    if (!packageSwiftPath || !fs.existsSync(packageSwiftPath)) return;
+
+    packageSwiftText = fs.readFileSync(packageSwiftPath, 'utf-8');
+    packageSwiftText = rewritePackageSwiftValue(packageSwiftText, 'firebaseSDKVersion', pluginVariables.IOS_FIREBASE_SDK_VERSION || '12.9.0');
+    packageSwiftText = rewritePackageSwiftValue(packageSwiftText, 'googleTagManagerVersion', pluginVariables.IOS_GOOGLE_TAG_MANAGER_VERSION || '9.0.0');
+    packageSwiftText = rewritePackageSwiftValue(packageSwiftText, 'analyticsSPMVariant', getAnalyticsSpmVariant());
+    fs.writeFileSync(packageSwiftPath, packageSwiftText, 'utf-8');
+};
+
+const getAnalyticsSpmVariant = function() {
+    const withoutAds = resolveBoolean(pluginVariables.FIREBASE_ANALYTICS_WITHOUT_ADS);
+    const onDeviceConversion = resolveBoolean(pluginVariables.IOS_ON_DEVICE_CONVERSION_ANALYTICS);
+
+    if (withoutAds && onDeviceConversion) {
+        return 'core-with-on-device-conversion';
+    }
+    if (withoutAds) {
+        return 'core';
+    }
+    if (onDeviceConversion) {
+        return 'full';
+    }
+    return 'identity-support';
+};
+
+const rewritePackageSwiftValue = function(text, key, value) {
+    const pattern = new RegExp(`let ${key}(?:\\s*:\\s*Version)? = \"[^\"]+\"`);
+    return text.replace(pattern, function(match) {
+        return match.replace(/\"[^\"]+\"/, `"${value}"`);
+    });
 };
 
 /**
@@ -142,6 +179,7 @@ const run = function() {
     for (const variableName of VARIABLE_NAMES) {
         applyPluginVariable(variableName);
     }
+    applyPackageSwiftSettings();
     if (pluginXmlModified) writePluginXmlText();
 };
 
@@ -326,6 +364,7 @@ const main = function() {
         projectPackageJsonPath = path.join(projectPath, 'package.json');
         configXmlPath = path.join(projectPath, 'config.xml');
         pluginXmlPath = path.join(pluginNodePath, "plugin.xml");
+        packageSwiftPath = path.join(pluginNodePath, "Package.swift");
         run();
     } catch(e) {
         console.error(`${PLUGIN_NAME} - ERROR: ${e.message}`);

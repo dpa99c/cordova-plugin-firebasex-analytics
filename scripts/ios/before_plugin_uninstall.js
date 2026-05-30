@@ -20,14 +20,16 @@ var xcode = require("xcode");
 module.exports = function(context) {
     var iosPlatformPath = path.join(context.opts.projectRoot, "platforms", "ios");
 
-    var appName;
-    try {
-        var configXmlPath = path.join(context.opts.projectRoot, "config.xml");
-        var configXml = fs.readFileSync(configXmlPath, "utf-8");
-        var nameMatch = configXml.match(/<name>([^<]+)<\/name>/);
-        appName = nameMatch ? nameMatch[1] : null;
-    } catch(e) {
-        return;
+    var appName = fs.existsSync(path.join(iosPlatformPath, "App")) ? "App" : null;
+    if (!appName) {
+        try {
+            var configXmlPath = path.join(context.opts.projectRoot, "config.xml");
+            var configXml = fs.readFileSync(configXmlPath, "utf-8");
+            var nameMatch = configXml.match(/<name>([^<]+)<\/name>/);
+            appName = nameMatch ? nameMatch[1] : null;
+        } catch(e) {
+            return;
+        }
     }
 
     if (!appName) return;

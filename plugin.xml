@@ -63,7 +63,7 @@
     </platform>
 
     <!-- iOS -->
-    <platform name="ios">
+    <platform name="ios" package="swift">
         <config-file parent="/*" target="config.xml">
             <feature name="FirebasexAnalyticsPlugin">
                 <param name="ios-package" value="FirebasexAnalyticsPlugin" />
@@ -82,10 +82,10 @@
                 <source url="https://cdn.cocoapods.org/" />
             </config>
             <pods use-frameworks="true">
-                <pod name="FirebaseAnalytics/Core" spec="12.9.0" />
-                <pod name="FirebaseAnalytics/IdentitySupport" spec="12.9.0" />
-                <!--<pod name="GoogleAdsOnDeviceConversion" spec="3.1.0"/>-->
-                <pod name="GoogleTagManager" spec="9.0.0" />
+                <pod name="FirebaseAnalytics/Core" spec="12.9.0" nospm="true" />
+                <pod name="FirebaseAnalytics/IdentitySupport" spec="12.9.0" nospm="true" />
+                <!--<pod name="GoogleAdsOnDeviceConversion" spec="3.6.0" nospm="true" />-->
+                <pod name="GoogleTagManager" spec="9.0.0" nospm="true" />
             </pods>
         </podspec>
 
