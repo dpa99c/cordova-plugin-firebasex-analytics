@@ -54,7 +54,7 @@
             <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="$GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS" />
         </config-file>
 
-        <preference name="ANDROID_FIREBASE_ANALYTICS_VERSION" default="23.0.0" />
+        <preference name="ANDROID_FIREBASE_ANALYTICS_VERSION" default="23.2.0" />
         <preference name="ANDROID_PLAY_SERVICES_TAGMANAGER_VERSION" default="18.3.0" />
 
         <source-file src="src/android/FirebasexAnalyticsPlugin.java" target-dir="src/org/apache/cordova/firebasex" />
