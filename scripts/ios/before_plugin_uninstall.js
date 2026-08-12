@@ -55,7 +55,9 @@ function removeGoogleTagManagerContainer(iosPlatformPath, appName) {
         xcodeProject.parseSync();
 
         console.log("[FirebasexAnalytics] Removing GoogleTagManager container");
-        var appPBXGroup = xcodeProject.findPBXGroupKey({name: appName});
+        // On cordova-ios 8+ the generated group carries only a path, not a matching name,
+        // so look the app group up both ways rather than assuming either.
+        var appPBXGroup = xcodeProject.findPBXGroupKey({name: appName}) || xcodeProject.findPBXGroupKey({path: appName});
         xcodeProject.removeResourceFile("container", {
             lastKnownFileType: "folder",
             fileEncoding: 9

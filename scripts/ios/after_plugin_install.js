@@ -321,7 +321,9 @@ function addGoogleTagManagerContainer(context, iosPlatformPath, appName) {
 
         console.log("[FirebasexAnalytics] Preparing GoogleTagManager on iOS");
         fs.cpSync(containerDirectorySource, containerDirectoryTarget, {recursive: true});
-        var appPBXGroup = xcodeProject.findPBXGroupKey({name: appName});
+        // On cordova-ios 8+ the generated group carries only a path, not a matching name,
+        // so look the app group up both ways rather than assuming either.
+        var appPBXGroup = xcodeProject.findPBXGroupKey({name: appName}) || xcodeProject.findPBXGroupKey({path: appName});
         xcodeProject.addResourceFile("container", {
             lastKnownFileType: "folder",
             fileEncoding: 9
