@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-firebasex-analytics",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Firebase Analytics module for FirebaseX",
   "author": "Dave Alden",
   "license": "MIT",

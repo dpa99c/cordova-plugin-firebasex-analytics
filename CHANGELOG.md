@@ -1,3 +1,6 @@
+# Version 1.0.4
+- fix: Pin core plugin dependency to v1
+
 # Version 1.0.3
 - fix: update ANDROID_PLAY_SERVICES_TAGMANAGER_VERSION default to 18.3.0
 
