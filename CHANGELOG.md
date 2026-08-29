@@ -1,3 +1,12 @@
+# Version 2.0.2
+
+- fix(ios): find the app PBXGroup by path as well as name (cordova-ios 8)
+	- Merged from [PR #3](https://github.com/dpa99c/cordova-plugin-firebasex-analytics/pull/3)
+- fix: add types field to package.json so TypeScript resolves type definitions
+	- Merged from [PR #2](https://github.com/dpa99c/cordova-plugin-firebasex-analytics/pull/2)
+- (ios) Fix OnDeviceConversion package being included in builds where `IOS_ON_DEVICE_CONVERSION_ANALYTICS=false`, causing Mac Catalyst build failures.
+	- Resolves [#1](https://github.com/dpa99c/cordova-plugin-firebasex-analytics/issues/1) and [#4](https://github.com/dpa99c/cordova-plugin-firebasex-analytics/issues/4).
+
 # Version 2.0.1
 - fix: pin core plugin dependency to v2
 
