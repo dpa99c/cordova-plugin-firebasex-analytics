@@ -4,7 +4,7 @@ Firebase Analytics plugin for the [modular FirebaseX Cordova plugin suite](https
 
 This plugin wraps the [Firebase Analytics SDK](https://firebase.google.com/docs/analytics) and provides methods to log events, set user properties, and control analytics data collection in your Cordova app.
 
-Supported platforms: Android and iOS
+Supported platforms: Android, iOS, and Mac Catalyst when `IOS_ON_DEVICE_CONVERSION_ANALYTICS` is set to `false`.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -53,7 +53,17 @@ The following plugin variables can be set at installation time using the `--vari
 | `GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_STORAGE` | `true` | Default consent for ad-related data storage. |
 | `GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA` | `true` | Default consent for ad user data collection. |
 | `GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS` | `true` | Default consent for ad personalization signals. |
-| `IOS_ON_DEVICE_CONVERSION_ANALYTICS` | `false` | Whether to enable on-device conversion analytics on iOS. |
+| `IOS_ON_DEVICE_CONVERSION_ANALYTICS` | `false` | Whether to enable on-device conversion analytics on iOS. Set to `false` for Mac Catalyst builds because the on-device conversion framework does not support Mac Catalyst. |
+
+### Mac Catalyst
+
+Mac Catalyst builds are supported when this plugin is included and `IOS_ON_DEVICE_CONVERSION_ANALYTICS` is set to `false`. This selects an Analytics product that does not link the `GoogleAdsOnDeviceConversion` framework, which does not contain a Mac Catalyst slice.
+
+Set the variable explicitly when installing the plugin:
+
+  cordova plugin add cordova-plugin-firebasex-analytics --variable IOS_ON_DEVICE_CONVERSION_ANALYTICS=false
+
+Mac Catalyst builds are not supported when `IOS_ON_DEVICE_CONVERSION_ANALYTICS` is set to `true`.
 
 For example, to disable analytics collection on startup and remove ad tracking:
 

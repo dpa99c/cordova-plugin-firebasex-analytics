@@ -127,7 +127,8 @@ function resolveBoolean(value) {
 function getPackageSwiftPaths(context) {
     var paths = [
         path.resolve(__dirname, "..", "..", "Package.swift"),
-        path.join(context.opts.projectRoot, "plugins", PLUGIN_ID, "Package.swift")
+        path.join(context.opts.projectRoot, "plugins", PLUGIN_ID, "Package.swift"),
+        path.join(context.opts.projectRoot, "platforms", "ios", "packages", PLUGIN_ID, "Package.swift")
     ];
 
     return paths.filter(function(packageSwiftPath, index) {
