@@ -131,8 +131,15 @@ function getPackageSwiftPaths(context) {
         path.join(context.opts.projectRoot, "platforms", "ios", "packages", PLUGIN_ID, "Package.swift")
     ];
 
-    return paths.filter(function(packageSwiftPath, index) {
-        return fs.existsSync(packageSwiftPath) && paths.indexOf(packageSwiftPath) === index;
+    var seen = {};
+    return paths.filter(function(packageSwiftPath) {
+        if (seen[packageSwiftPath]) return false;
+        seen[packageSwiftPath] = true;
+        if (!fs.existsSync(packageSwiftPath)) {
+            console.warn("[FirebasexAnalytics] Package.swift not found at " + packageSwiftPath + ". Cannot update the Firebase SDK version in this copy.");
+            return false;
+        }
+        return true;
     });
 }
 
@@ -185,6 +192,7 @@ function updatePackageSwift(context, pluginVariables) {
 
         if (modified) {
             fs.writeFileSync(packageSwiftPath, packageSwiftContents);
+            console.log("[FirebasexAnalytics] Updated Swift package manifest at " + packageSwiftPath);
         }
     });
 }
