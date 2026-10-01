@@ -1,3 +1,7 @@
+# Version 2.0.3
+- (ios) fix: log and validate Firebase SPM version updates across installed and generated package manifests.
+	- Resolves https://github.com/dpa99c/cordova-plugin-firebasex/issues/977
+
 # Version 2.0.2
 
 - fix(ios): find the app PBXGroup by path as well as name (cordova-ios 8)
