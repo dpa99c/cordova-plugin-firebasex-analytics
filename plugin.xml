@@ -93,5 +93,14 @@
         <hook type="before_plugin_uninstall" src="scripts/ios/before_plugin_uninstall.js" />
     </platform>
 
+    <!-- before_compile, not after_prepare: cordova does not define the order of plugin
+         after_prepare hooks. They are collected in whatever order fast-glob returns for the
+         plugins directory, and cordova-plugin-firebasex-core's own after_prepare COPIES
+         GoogleService-Info.plist from the project root over the platform copy. So a write from
+         here on after_prepare is discarded or kept depending on the filesystem, which is not
+         something to build on. Measured on one project: the six keys were reported as written and
+         the file had none of them, while crashlytics and performance, which happened to come back
+         after core, kept theirs. See apache/cordova-lib#1010. -->
+    <hook type="before_compile" src="scripts/before_compile.js" />
     <hook type="after_install" src="scripts/post_install.js" />
 </plugin>
