@@ -22,10 +22,17 @@ static NSString* const FIREBASE_ANALYTICS_COLLECTION_ENABLED = @"FIREBASE_ANALYT
 /**
  * Logs a custom analytics event.
  *
+ * Dispatched to the main queue rather than @c runInBackground:, which uses Cordova's
+ * concurrent global queue. @c logEventWithName:parameters: reaches
+ * @c APMScreenViewReporter synchronously on the calling thread to attach the current
+ * screen to the event, and the SDK's automatic screen reporting writes that same state
+ * from the main thread, so a background caller races it.
+ * See https://github.com/firebase/firebase-ios-sdk/issues/6373
+ *
  * @param command args[0] = event name, args[1] = parameters dictionary.
  */
 - (void)logEvent:(CDVInvokedUrlCommand*)command {
-    [self.commandDelegate runInBackground:^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         @try {
             NSString* name = [command.arguments objectAtIndex:0];
             NSDictionary* parameters = [command argumentAtIndex:1];
@@ -35,7 +42,7 @@ static NSString* const FIREBASE_ANALYTICS_COLLECTION_ENABLED = @"FIREBASE_ANALYT
         } @catch (NSException *exception) {
             [self handleException:exception command:command];
         }
-    }];
+    });
 }
 
 /**
